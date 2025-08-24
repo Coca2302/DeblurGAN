@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deblur Generator Demo</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    .upload-section {
+      background: linear-gradient(135deg, #f8faff, #f0f4ff);
+      border: 2px dashed #667eea;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 40px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+
+    .upload-section:hover {
+      border-color: #764ba2;
+      background: linear-gradient(135deg, #f0f4ff, #e8f0ff);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      z-index: 1;
+    }
+
+    #file-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .file-input-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.1rem;
+      border: none;
+    }
+
+    .file-input-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .upload-text {
+      margin-top: 20px;
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .button-section {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    #upload-btn {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      color: white;
+      border: none;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+    }
+
+    #upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(255, 107, 107, 0.4);
+    }
+
+    #upload-btn:active {
+      transform: translateY(0);
+    }
+
+    #upload-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .images {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
+    .image-card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .image-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+
+    .image-card h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+      color: #333;
+    }
+
+    .input-card h3 {
+      color: #667eea;
+    }
+
+    .output-card h3 {
+      color: #ff6b6b;
+    }
+
+    .image-placeholder {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(135deg, #f8faff, #f0f4ff);
+      border: 2px dashed #ddd;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-size: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .images img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .images img:hover {
+      transform: scale(1.02);
+    }
+
+    #status {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 500;
+      padding: 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .status-processing {
+      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .status-success {
+      background: linear-gradient(135deg, #d4edda, #b8e6b8);
+      color: #155724;
+      border: 1px solid #b8e6b8;
+    }
+
+    .status-error {
+      background: linear-gradient(135deg, #f8d7da, #f5b7b1);
+      color: #721c24;
+      border: 1px solid #f5b7b1;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(133, 100, 4, 0.3);
+      border-radius: 50%;
+      border-top-color: #856404;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .icon {
+      font-size: 1.2em;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .images {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .upload-section {
+        padding: 30px 20px;
+      }
+    }
+
+    .processing-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .processing-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .processing-content {
+      text-align: center;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .processing-content i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      animation: spin 2s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1><i class="fas fa-magic icon"></i> Deblur Generator</h1>
+      <p class="subtitle">Biến ảnh mờ thành ảnh sắc nét với AI tiên tiến</p>
+    </div>
+
+    <div class="upload-section">
+      <div class="file-input-wrapper">
+        <input id="file-input" type="file" accept="image/*" />
+        <label for="file-input" class="file-input-label">
+          <i class="fas fa-cloud-upload-alt icon"></i>
+          Chọn ảnh để xử lý
+        </label>
+      </div>
+      <div class="upload-text">
+        Hỗ trợ các định dạng: JPG, PNG, WebP (tối đa 10MB)
+      </div>
+    </div>
+
+    <div class="button-section">
+      <button id="upload-btn">
+        <i class="fas fa-play icon"></i>
+        Bắt đầu xử lý
+      </button>
+    </div>
+
+    <div class="images">
+      <div class="image-card input-card">
+        <h3><i class="fas fa-image icon"></i> Ảnh gốc</h3>
+        <div class="image-placeholder" id="input-placeholder">
+          <i class="fas fa-photo-video" style="font-size: 3rem; color: #ddd;"></i>
+        </div>
+        <img id="input-img" src="" alt="input" style="display: none;" />
+      </div>
+      <div class="image-card output-card">
+        <h3><i class="fas fa-star icon"></i> Ảnh đã xử lý</h3>
+        <div class="image-placeholder" id="output-placeholder">
+          <i class="fas fa-magic" style="font-size: 3rem; color: #ddd;"></i>
+        </div>
+        <img id="output-img" src="" alt="output" style="display: none;" />
+        <div class="processing-overlay" id="processing-overlay">
+          <div class="processing-content">
+            <i class="fas fa-cog"></i>
+            <div>Đang xử lý...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("file-input");
+    const uploadBtn = document.getElementById("upload-btn");
+    const inputImg = document.getElementById("input-img");
+    const outputImg = document.getElementById("output-img");
+    const statusDiv = document.getElementById("status");
+    const inputPlaceholder = document.getElementById("input-placeholder");
+    const outputPlaceholder = document.getElementById("output-placeholder");
+    const processingOverlay = document.getElementById("processing-overlay");
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Show input preview
+        inputImg.src = URL.createObjectURL(file);
+        inputImg.style.display = 'block';
+        inputPlaceholder.style.display = 'none';
+        
+        // Update upload button text
+        uploadBtn.innerHTML = '<i class="fas fa-play icon"></i> Bắt đầu xử lý';
+        uploadBtn.style.opacity = '1';
+        uploadBtn.style.pointerEvents = 'auto';
+        
+        // Clear previous output
+        outputImg.style.display = 'none';
+        outputPlaceholder.style.display = 'flex';
+        statusDiv.innerHTML = '';
+        statusDiv.className = '';
+      }
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        showStatus("Vui lòng chọn ảnh trước khi xử lý", "error");
+        return;
+      }
+
+      // Show processing state
+      uploadBtn.style.opacity = '0.7';
+      uploadBtn.style.pointerEvents = 'none';
+      uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin icon"></i> Đang xử lý...';
+      processingOverlay.classList.add('active');
+      showStatus('<div class="loading-spinner"></div>Đang upload và xử lý ảnh...', "processing");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          showStatus("Lỗi xử lý: " + (err?.detail || res.statusText), "error");
+          return;
+        }
+
+        const blob = await res.blob();
+        outputImg.src = URL.createObjectURL(blob);
+        outputImg.style.display = 'block';
+        outputPlaceholder.style.display = 'none';
+        showStatus('<i class="fas fa-check-circle icon"></i> Xử lý thành công! Ảnh đã được làm sắc nét.', "success");
+      } catch (err) {
+        console.error(err);
+        showStatus('<i class="fas fa-exclamation-triangle icon"></i> Lỗi kết nối với server. Vui lòng thử lại.', "error");
+      } finally {
+        uploadBtn.style.opacity = '1';
+        uploadBtn.style.pointerEvents = 'auto';
+        uploadBtn.innerHTML = '<i class="fas fa-play icon"></i> Xử lý ảnh khác';
+        processingOverlay.classList.remove('active');
+      }
+    });
+
+    function showStatus(message, type) {
+      statusDiv.innerHTML = message;
+      statusDiv.className = `status-${type}`;
+    }
+  </script>
+</body>
+</html>
